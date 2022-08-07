@@ -7,6 +7,6 @@ const firebaseConfig = {
     appId: "1:1050581757407:web:7c880cbd38786b06de686a",
     measurementId: "G-77CNERNHQE"
 };
-export const config = {
+export const authConfig = {
     firebaseConfig
 }
