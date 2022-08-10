@@ -13,9 +13,9 @@ export class AuthenController {
         AutheriRouter.post('/login', (req, res) => {
             this.authDatabaseService.loginUser(req.body, res)
         })
-        // AutheriRouter.post('/checkrefresh', this.middleware.authenMiddleware, (req, res) => {
-        //     this.authoriService.createAccessToken(req, res)
-        // })
+        AutheriRouter.post('/checkrefresh', (req, res) => {
+            this.authDatabaseService.createAccessTokenByRefresherToken(req, res)
+        })
         return AutheriRouter;
     }
 }

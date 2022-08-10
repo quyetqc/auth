@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt';
 import firebaseClient from "firebase"
 import firebaseAdmin from 'firebase-admin'
 import serviceAccount from '../../serviceAccountKey.json'
+import jwt, { Secret } from 'jsonwebtoken';
 import * as config from './auth.config'
 import { userInfo } from 'os';
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
@@ -15,6 +16,7 @@ const myPlaintextPassword = 's0/\/\P4$$w0rD';
 const someOtherPlaintextPassword = 'not_bacon';
 
 const credentialObject: object = serviceAccount;
+
 firebaseAdmin.initializeApp({
     credential: firebaseAdmin.credential.cert(credentialObject)
 });
@@ -25,18 +27,18 @@ firebaseClient.initializeApp(config.authConfig.firebaseConfig);
 export class userData extends DBAPI {
     async check_user(
         data: sign,
-    ): Promise<{ isSuccess: boolean, password: string }> {
+    ): Promise<{ isSuccess: boolean, password: string, id: number | string, email: string }> {
         const connection = await this.createConnection()
         try {
-            const query = `select email, password from users`;
+            const query = `select email, password, id from users`;
             const [row]: any = await connection.execute(query)
             const result: any = row;
             for (let i = 0; i < result.length; i++) {
                 if (data.email === result[i].email) {
-                    return { isSuccess: true, password: row[i].password }
+                    return { isSuccess: true, password: row[i].password, email: row[i].email, id: row[i].id }
                 }
             }
-            return { isSuccess: false, password: '' }
+            return { isSuccess: false, password: '', id: '', email: '' }
         }
         catch (error) {
             throw (error)
@@ -52,16 +54,6 @@ export class userData extends DBAPI {
         return (userRe)
     }
 
-    async loginFirebase(data: sign, res: Response) {
-        try {
-            const callFirebase = await firebaseClient.auth().signInWithEmailAndPassword(data.email, data.password)
-            const token = await firebaseClient.auth().currentUser!.getIdToken();
-            return ({ accesstoken: token });
-        }
-        catch (error) {
-            return ({ data: error })
-        }
-    }
     async sign(
         data: sign
     ) {
@@ -70,12 +62,19 @@ export class userData extends DBAPI {
             const check = await this.check_user(data);
             if (check.isSuccess == false) {
                 const hashPassword = bcrypt.hashSync(data.password, saltRounds);
-                const query = `insert into users (email, password) values ('${data.email}', '${hashPassword}')`;
+                const query = `insert into users (email, password, address, phone_number) values ('${data.email}', '${hashPassword}', '${data.address}', '${data.phone_number}')`;
                 const [row] = await connection.execute(query);
                 const firebase = await this.createFirebase(data);
                 if (firebase.uid.length == 0) {
-                    await this.createFirebase(data)
-                    return { message: 'accout chua duoc verify' }
+                    for (let i = 0; i <= 5; i++) {
+                        await this.createFirebase(data)
+                        if (firebase.uid.length != 0) {
+                            break;
+                        }
+                        else {
+                            return { message: 'accout chua duoc verify, vui long tao lai' }
+                        }
+                    }
                 }
                 return { message: 'Tao user thanh cong, accout duoc verify' }
             }
@@ -85,6 +84,17 @@ export class userData extends DBAPI {
             throw (error)
         }
     }
+
+    async loginFirebase(data: sign, res: Response) {
+        try {
+            const callFirebase = await firebaseClient.auth().signInWithEmailAndPassword(data.email, data.password)
+            return { message: "dang nhap firebase thanh cong" }
+        }
+        catch (error) {
+            return ({ data: error })
+        }
+    }
+
     async login(
         data: sign,
         res: Response
@@ -99,10 +109,49 @@ export class userData extends DBAPI {
                 }
                 else {
                     const login = await this.loginFirebase(data, res)
-                    return { message: 'Dang nhap thanh cong', accesstoken: login.accesstoken }
+                    const payload = {
+                        "email": check.email,
+                        "id": check.id
+                    }
+                    console.log(payload)
+                    const SECRETKEY = process.env.SECRETKEY || "";
+                    const REFRESHKEY = process.env.REFRESHKEY || "";
+                    const accessToken = jwt.sign(payload, SECRETKEY, { expiresIn: "900s" })
+                    const refreshToken = jwt.sign(payload, REFRESHKEY, { expiresIn: "28800s" })
+                    const query = `UPDATE users SET refresh_token = '${refreshToken}' WHERE id = ${check.id};`
+                    const [row] = await connection.execute(query)
+                    return { message: 'Dang nhap thanh cong', messageFirebase: login.message, accessToken: accessToken, refreshToken: refreshToken }
                 }
             }
             return { message: 'user khong ton tai' }
+        }
+        catch (error) {
+            throw (error)
+        }
+    }
+    async checkRefreshToken(
+        req: Request,
+    ) {
+        const connection = await this.createConnection()
+        try {
+            const refreshToken = req.headers.refreshtoken as string;
+            const refreshKey = process.env.REFRESHKEY || ''
+            const a: any = jwt.verify(refreshToken, refreshKey);
+            const query = `select id, email, refresh_token from users`;
+            const [row] = await connection.execute(query);
+            const result: any = row;
+            const SECRETKEY = process.env.SECRETKEY || '';
+            for (let i = 0; i < result.length; i++) {
+                if (result[i].refresh_token == refreshToken && a.id == result[i].id) {
+                    const data = {
+                        "email": result[i].email,
+                        "id": result[i].id
+                    }
+                    const accessToken = jwt.sign(data, SECRETKEY, { expiresIn: '900s' });
+                    return { message: 'refreshtoken hop le', accessToken };
+                }
+            }
+            return { message: 'refreshtoken khong hop le' }
         }
         catch (error) {
             throw (error)

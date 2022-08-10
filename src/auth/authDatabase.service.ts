@@ -28,17 +28,16 @@ export class authDatabaseService {
             throw (error)
         }
     }
-    // async createAccessToken(
-    //     req: Request,
-    //     res: Response,
-    // ) {
-    //     try {
-    //         const result = await this.authorized.check_refreshToken(req);
-    //         res.send(result);
-    //     }
-    //     catch (error) {
-    //         throw (error)
-    //     }
-    // }
-
+    async createAccessTokenByRefresherToken(
+        req: Request,
+        res: Response,
+    ) {
+        try {
+            const result = await this.authorized.checkRefreshToken(req);
+            res.send(result);
+        }
+        catch (error) {
+            throw (error)
+        }
+    }
 }
