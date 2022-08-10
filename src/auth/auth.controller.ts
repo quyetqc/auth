@@ -8,7 +8,6 @@ export class AuthenController {
         const AutheriRouter = express.Router();
         AutheriRouter.post('/create', (req, res) => {
             this.authDatabaseService.createUser(req.body, res)
-
         })
         AutheriRouter.post('/login', (req, res) => {
             this.authDatabaseService.loginUser(req.body, res)
