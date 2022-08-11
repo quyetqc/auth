@@ -12,6 +12,16 @@ export class DBAPI {
         return connection;
     }
 
+    static async createConnection2() {
+        const connection = await mysql.createConnection({
+            host: process.env.HOST,
+            user: process.env.USER,
+            password: process.env.PWD,
+            database: process.env.DATABASE,
+        });
+        return connection;
+    }
+
     async create<T>(table: string, data: T) {
         try {
             const connection = await this.createConnection();

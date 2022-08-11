@@ -8,8 +8,6 @@ import firebaseAdmin from 'firebase-admin'
 import serviceAccount from '../../serviceAccountKey.json'
 import jwt, { Secret } from 'jsonwebtoken';
 import * as config from './auth.config'
-import { userInfo } from 'os';
-import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 
 const saltRounds = 10;
 const myPlaintextPassword = 's0/\/\P4$$w0rD';
@@ -111,9 +109,8 @@ export class userData extends DBAPI {
                     const login = await this.loginFirebase(data, res)
                     const payload = {
                         "email": check.email,
-                        "id": check.id
+                        "id": check.id,
                     }
-                    console.log(payload)
                     const SECRETKEY = process.env.SECRETKEY || "";
                     const REFRESHKEY = process.env.REFRESHKEY || "";
                     const accessToken = jwt.sign(payload, SECRETKEY, { expiresIn: "900s" })
@@ -129,6 +126,7 @@ export class userData extends DBAPI {
             throw (error)
         }
     }
+
     async checkRefreshToken(
         req: Request,
     ) {
@@ -145,7 +143,7 @@ export class userData extends DBAPI {
                 if (result[i].refresh_token == refreshToken && a.id == result[i].id) {
                     const data = {
                         "email": result[i].email,
-                        "id": result[i].id
+                        "id": result[i].id,
                     }
                     const accessToken = jwt.sign(data, SECRETKEY, { expiresIn: '900s' });
                     return { message: 'refreshtoken hop le', accessToken };
