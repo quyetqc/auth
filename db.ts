@@ -5,18 +5,17 @@ export class DBAPI {
     async createConnection() {
         const connection = await mysql.createConnection({
             host: process.env.HOST,
-            user: process.env.USER,
-            password: process.env.PWD,
+            user: process.env.USER_DB,
+            password: process.env.PASSWORD,
             database: process.env.DATABASE,
         });
         return connection;
     }
-
     static async createConnection2() {
         const connection = await mysql.createConnection({
             host: process.env.HOST,
-            user: process.env.USER,
-            password: process.env.PWD,
+            user: process.env.USER_DB,
+            password: process.env.PASSWORD,
             database: process.env.DATABASE,
         });
         return connection;

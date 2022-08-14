@@ -7,29 +7,23 @@ export class AuthorMiddleware extends DBAPI {
   }
   async author(req: Request, res: Response, next: NextFunction) {
     try {
-      const a = Object.values(req.context)
+      //const a = Object.values(req.context)
       let b = 0;
+      console.log(req.path)
       switch (req.path) {
         case "/create":
-          for (let i = 0; i < a.length; i++) {
-            if (a[i] === "DELETE") {
-              break;
-            }
-            b = b + 1;
-          }
+            res.send('asdfsadf asdf')
+          break;
         case "/login":
           // check quyen
           break;
         default:
         // code block
       }
-      if (b === a.length) {
-        throw "Unauthorized"
-      }
       next();
     } catch (e) {
       res.status(401)
-      res.send('Unauthorized');
+      res.send('Unauthorized2');
     }
   }
 }

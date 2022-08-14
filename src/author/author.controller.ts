@@ -8,7 +8,6 @@ export class AuthorController {
     createRouter() {
         const authorRouter = express.Router()
         authorRouter.post('/create', this.middleware.verify, this.authorMiddleware.author, (req, res) => {
-            console.log(req.path.split(/\s*(?:;|$)\s*/))
             this.authorService.createAuthor(req.body, res);
         })
         authorRouter.put('/update/:id', this.middleware.verify, (req, res) => {

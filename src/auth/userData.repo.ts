@@ -60,7 +60,7 @@ export class userData extends DBAPI {
             const check = await this.check_user(data);
             if (check.isSuccess == false) {
                 const hashPassword = bcrypt.hashSync(data.password, saltRounds);
-                const query = `insert into users (email, password, address, phone_number) values ('${data.email}', '${hashPassword}', '${data.address}', '${data.phone_number}')`;
+                const query = `insert into users (email, password) values ('${data.email}', '${hashPassword}')`;
                 const [row] = await connection.execute(query);
                 const firebase = await this.createFirebase(data);
                 if (firebase.uid.length == 0) {
@@ -114,10 +114,10 @@ export class userData extends DBAPI {
                     const SECRETKEY = process.env.SECRETKEY || "";
                     const REFRESHKEY = process.env.REFRESHKEY || "";
                     const accessToken = jwt.sign(payload, SECRETKEY, { expiresIn: "900s" })
-                    const refreshToken = jwt.sign(payload, REFRESHKEY, { expiresIn: "28800s" })
-                    const query = `UPDATE users SET refresh_token = '${refreshToken}' WHERE id = ${check.id};`
-                    const [row] = await connection.execute(query)
-                    return { message: 'Dang nhap thanh cong', messageFirebase: login.message, accessToken: accessToken, refreshToken: refreshToken }
+                    // const refreshToken = jwt.sign(payload, REFRESHKEY, { expiresIn: "28800s" })
+                    // const query = `UPDATE users SET refresh_token = '${refreshToken}' WHERE id = ${check.id};`
+                    // const [row] = await connection.execute(query)
+                    return { message: 'Dang nhap thanh cong', messageFirebase: login.message, accessToken: accessToken}
                 }
             }
             return { message: 'user khong ton tai' }

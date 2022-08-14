@@ -1,0 +1,9 @@
+select rrp.id_user, rrp.role_name, rrp.permissionId, permission.name as name_permission 
+from (select ur.id_user, ur.role_name, role_permission.permissionId 
+from (select u.id_user, role.name as role_name, role.id as id_role 
+from role inner join (select id as id_user from users) as u
+on u.id_user = role.id_user) as ur 
+inner join role_permission on ur.id_role = role_permission.roleId) as rrp 
+inner join permission on permission.id = rrp.permissionId
+
+
