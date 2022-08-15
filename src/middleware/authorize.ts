@@ -1,6 +1,7 @@
 import jwt, { Secret } from 'jsonwebtoken';
 import express, { Request, Response, NextFunction } from 'express'
 import { DBAPI } from '../../db';
+import { messaging } from 'firebase';
 export class AuthorMiddleware extends DBAPI {
   constructor() {
     super();
@@ -8,28 +9,35 @@ export class AuthorMiddleware extends DBAPI {
   async author(req: Request, res: Response, next: NextFunction) {
     try {
       const a = Object.values(req.context)
-      let b = 0;
-      switch (req.path) {
+      const namePath = req.path.split(/(\d)/);
+      switch (namePath[0]) {
         case "/create":
-          for (let i = 0; i < a.length; i++) {
-            if (a[i] === "DELETE") {
-              break;
-            }
-            b = b + 1;
+          if (!a.includes("CREATE")) {
+            return res.status(200).send("Nguoi dung khong co quyen tao")
           }
-        case "/login":
-          // check quyen
+          break;
+        case "/update/":
+          if (!a.includes("UPDATE")) {
+            return res.status(200).send("Nguoi dung khong co quyen sua")
+          }
+          break;
+        case "/":
+          if (!a.includes("GET")) {
+            return res.status(200).send("Nguoi dung khong co quyen xem")
+          }
+          break;
+        case "/delete/":
+          if (!a.includes("DELETE")) {
+            return res.status(200).send("Nguoi dung khong co quyen xoa")
+          }
           break;
         default:
         // code block
       }
-      if (b === a.length) {
-        throw "Unauthorized"
-      }
       next();
     } catch (e) {
       res.status(401)
-      res.send('Unauthorized');
+      res.send('Unauthorized12');
     }
   }
 }

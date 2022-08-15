@@ -16,15 +16,17 @@ export class Middleware extends DBAPI {
             const secretKey = process.env.SECRETKEY || ''
             const a: any = jwt.verify(idToken, secretKey);
 
-            const queryRole = `select id_user, action_code from per_detail
-             inner join (select id_per as id_role, id_user from user_per
-             inner join (select id from users) as us
-             on user_per.id = us.id and user_per.licensed = 1 and user_per.id_user = ${a.id}) as us_per
-             on per_detail.id_per = us_per.id_role`;
+            const queryRole = `select rrp.id_user, rrp.role_name, rrp.permissionId, permission.name as name_permission 
+            from (select ur.id_user, ur.role_name, role_permission.permissionId 
+            from (select u.id_user, role.name as role_name, role.id as id_role 
+            from role inner join (select id as id_user from users) as u
+            on u.id_user = role.user_id) as ur 
+            inner join role_permission on ur.id_role = role_permission.roleId) as rrp 
+            inner join permission on permission.id = rrp.permissionId and rrp.id_user = ${a.id}`;
             const resultRole: any = await connection.execute(queryRole);
             const NewResultAction = [];
             for (let i = 0; i < resultRole[0].length; i++) {
-                const resultAction = resultRole[0][i]['action_code'];
+                const resultAction = resultRole[0][i].name_permission;
                 NewResultAction.push(`${resultAction}`)
             }
             const data: any = Object.values(NewResultAction);
@@ -32,7 +34,7 @@ export class Middleware extends DBAPI {
             next();
         } catch (e) {
             res.status(401)
-            res.send('Unauthorized');
+            res.send('Unauthorized1');
         }
     }
 }
