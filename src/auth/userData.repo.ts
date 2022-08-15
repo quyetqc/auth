@@ -114,10 +114,10 @@ export class userData extends DBAPI {
                     const SECRETKEY = process.env.SECRETKEY || "";
                     const REFRESHKEY = process.env.REFRESHKEY || "";
                     const accessToken = jwt.sign(payload, SECRETKEY, { expiresIn: "900s" })
-                    // const refreshToken = jwt.sign(payload, REFRESHKEY, { expiresIn: "28800s" })
-                    // const query = `UPDATE users SET refresh_token = '${refreshToken}' WHERE id = ${check.id};`
-                    // const [row] = await connection.execute(query)
-                    return { message: 'Dang nhap thanh cong', messageFirebase: login.message, accessToken: accessToken}
+                    const refreshToken = jwt.sign(payload, REFRESHKEY, { expiresIn: "28800s" })
+                    const query = `UPDATE users SET refresh_token = '${refreshToken}' WHERE id = ${check.id};`
+                    const [row] = await connection.execute(query)
+                    return { message: 'Dang nhap thanh cong', messageFirebase: login.message, accessToken: accessToken, refreshToken: refreshToken }
                 }
             }
             return { message: 'user khong ton tai' }
